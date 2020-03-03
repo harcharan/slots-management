@@ -1,0 +1,41 @@
+<IfModule mod_rewrite.c>
+        <IfModule mod_negotiation.c>
+                Options -MultiViews
+        </IfModule>
+
+        RewriteEngine On
+
+         # Handle Authorization Header
+        RewriteCond %{HTTP:Authorization} .
+        RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+        # Redirect Trailing Slashes If Not A Folder...
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_URI} /(.*)/$
+        RewriteRule ^ /%1 [R=301,L]
+
+        RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.ico|\.jpg|\.jpeg|\.mp4|\.gif|robots\.txt|\.svg|\.ttf|\.otf|\.eot|\.woff|\.woff2)$ [NC]
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^ index.php [L]
+
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_URI} !^/public/
+        RewriteRule ^(css|js|images|fonts|uploads|vendor)/(.*)$ public/$1/$2 [L,NC]
+
+        ## Handle Front Controller...
+        #RewriteCond %{REQUEST_FILENAME} !-d
+        #RewriteCond %{REQUEST_FILENAME} !-f
+        #RewriteRule ^ index.php [L]
+
+
+</IfModule>
+# Disable index view
+Options -Indexes
+
+# Hide a specific file
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
