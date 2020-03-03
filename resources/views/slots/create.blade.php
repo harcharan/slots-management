@@ -4,7 +4,7 @@
 <h2 style="margin-top: 12px;" class="text-center">Add Slot</a></h2>
 <br>
  
-<form action="{{ route('slots.store') }}" method="POST" name="add_slot">
+<form action="{{ route('slots.store') }}" method="POST" id="add_slot">
     {{ csrf_field() }}
  
     <div class="row">
@@ -17,14 +17,14 @@
         </div>
         <div class="col-md-12">
             <div class="form-group">
-                <strong>Start</strong>
+                <strong>Start Time</strong>
                 <input type="text" name="start" class="form-control timepicker" placeholder="Select Start Time" autocomplete="off">
                 <span class="text-danger">{{ $errors->first('start') }}</span>
             </div>
         </div>
         <div class="col-md-12">
             <div class="form-group">
-                <strong>End</strong>
+                <strong>End Time</strong>
                 <input type="text" name="end" class="form-control timepicker" placeholder="Select End Time" autocomplete="off">
                 <span class="text-danger">{{ $errors->first('end') }}</span>
             </div>
@@ -41,6 +41,56 @@
         format: 'mm/dd/yyyy'
     });
     $('.timepicker').timepicker();
+
+    $("#add_slot")
+    // .submit(function(e) {
+    //     e.preventDefault();
+    // })
+    .validate({
+        rules:{
+            date:{
+                required: true
+            },  
+            start:{
+                required: true
+            },   
+            end:{
+                required: true
+            }, 
+        },
+        messages:{           
+            date:{
+                required: 'Please select date.'
+            },
+            start: {
+                required: 'Please enter start time.'
+            }, 
+            end: {
+                required: 'Please enter end time.'
+            },
+        },
+        errorElement:"span",
+        errorClass:"text-danger",
+        submitHandler: function(form) {
+            var form_data = $('#add_slot').serialize();
+            var url = "{{ route('checkSlot') }}";
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: form_data,
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response);
+                    if(!response) {
+                        form.submit();
+                    } else {
+                        $.growl.error({title: "Oops!", message: 'Slot not available for selected date and time.' });
+                    }
+                }
+            });
+            return false;
+        }
+    });
 </script>
 
 @endsection

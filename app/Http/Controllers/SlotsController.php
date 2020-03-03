@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Slot;
 use Redirect;
-use Carbon\Carbon;
 
 class SlotsController extends Controller
 {
@@ -46,11 +45,20 @@ class SlotsController extends Controller
 
         $data = $request->all();
 
-        $data['date'] = Carbon::createFromFormat('m-d-Y', $data['date'])->format('Y-m-d');
+        $data['date'] = date("Y-m-d", strtotime($data['date']));
+        $data['start'] = date("H:i", strtotime($data['start']));
+        $data['end'] = date("H:i", strtotime($data['end']));
         
-        Slot::create($data);
+        $status = 'success';
+        $message = 'Slot added successfully.';
+        try {
+            Slot::create($data);
+        } catch (\Exception $ex) {
+            $status = 'error';
+            $message = 'Something went wrong. Please try again.';
+        }
     
-        return Redirect::to('slots')->with('success', 'Slot added successfully.');
+        return Redirect::to('slots')->with($status, $message);
     }
 
     /**
@@ -86,15 +94,27 @@ class SlotsController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'title' => 'required',
-            'product_code' => 'required',
-            'description' => 'required',
+            'date' => 'required',
+            'start' => 'required',
+            'end' => 'required',
         ]);
-         
-        $data = ['title' => $request->title, 'description' => $request->description];
-        Slot::where('id', $id)->update($data);
+
+        $data = array();
+
+        $data['date'] = date("Y-m-d", strtotime($request->date));
+        $data['start'] = date("H:i", strtotime($request->start));
+        $data['end'] = date("H:i", strtotime($request->end));
+        
+        $status = 'success';
+        $message = 'Slot updated successfully.';
+        try {
+            Slot::where('id', $id)->update($data);
+        } catch (\Exception $ex) {
+            $status = 'error';
+            $message = 'Something went wrong. Please try again.';
+        }
    
-        return Redirect::to('slots')->with('success', 'Slot updated successfully.');
+        return Redirect::to('slots')->with($status, $message);
     }
 
     /**
@@ -108,4 +128,31 @@ class SlotsController extends Controller
         Slot::where('id', $id)->delete();
         return Redirect::to('slots')->with('success', 'Slot deleted successfully.');
     }
+
+    /*
+     * Check slot exists
+     */
+    public function checkSlot(Request $request) {
+        $date = date("Y-m-d", strtotime($request->date));
+        $start = date("H:i:s", strtotime($request->start));
+        $end = date("H:i:s", strtotime($request->end));
+
+        $slotAvailability = Slot::where('date', $date)
+        ->where(function ($query) use ($start, $end) { 
+            $query
+            ->where(function ($query) use ($start, $end) {
+                $query
+                    ->where('start', '<=', $start)
+                    ->where('end', '>', $start);
+            })
+            ->orWhere(function ($query) use ($start, $end) {
+                $query
+                    ->where('start', '<', $end)
+                    ->where('end', '>=', $end);
+            });
+        })->count();
+
+        return $slotAvailability;
+    }
+
 }

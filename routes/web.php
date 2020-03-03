@@ -11,4 +11,9 @@
 |
 */
 
+Route::get('/', function () {
+    return redirect(route('slots.index'));
+});
+
 Route::resource('slots', 'SlotsController');
+Route::get('/checkSlot', 'SlotsController@checkSlot')->name('checkSlot');
